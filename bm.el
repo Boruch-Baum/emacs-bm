@@ -615,7 +615,7 @@ in the minibuffer for quick navigation."
          "Jump to bookmark: "
          (mapcar 'car candidates) nil t)))
    (when (setq decision (assoc decision candidates))
-     (goto-char (overlay-start (cadr decision))))))
+     (bm-goto (cadr decision)))))
 
 (defun bm--suggest-lisp (&optional bm)
   "Suggestion function for lisp mode bookmark annotations."
