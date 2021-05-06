@@ -277,7 +277,7 @@
   :prefix "bm-")
 
 (defcustom bm-highlight-style 'bm-highlight-only-line
-  "*Specify how bookmars are highlighted."
+  "*Specify how bookmarks are highlighted."
   :type '(choice (const bm-highlight-only-line)
                  (const bm-highlight-only-fringe)
                  (const bm-highlight-line-and-fringe))
@@ -441,7 +441,7 @@ t, only display the total number of bookmarks."
   :group 'bm)
 
 (defcustom temporary-bookmark-p nil
-  "When stopping on a bookmark using `bm-next' or `bm-previsour'
+  "When stopping on a bookmark using `bm-next' or `bm-previous'
 the bookmark will be removed if this option is not nil."
   :type 'boolean
   :group 'bm)
