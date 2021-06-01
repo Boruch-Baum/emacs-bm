@@ -479,7 +479,7 @@ t, goto position on the line where the bookmark was set."
   "*Filename to store persistent bookmarks across sessions.
 
 nil, the repository will not be persistent."
-  :type 'string
+  :type 'file
   :group 'bm)
 
 
@@ -713,6 +713,33 @@ Either the bookmark at point or the BOOKMARK specified as parameter."
     marker-string))
 
 
+(defun bm--get-point-marker ()
+  "Return marker object for a bookmark point.
+The bookmark point ..."
+  (let* ((pos (point))
+         (start-pos pos)
+         result)
+         ;; IMPORTANT: Variable `result' is used for three separate purposes!
+    (if (not (and show-paren-mode
+                  (setq result (show-paren--categorize-paren pos))))
+      (point-marker)
+     (cond
+      ((> 0 (car result)) ; POINT is at close paren
+        (while (and (> pos (point-at-bol) (point-min))
+                    (setq result (= 5 (syntax-class (syntax-after pos)))))
+          (cl-decf pos)))
+      (t ; POINT is at open paren
+        (while (and (< pos (point-at-eol) (point-max))
+                    (setq result (= 4 (syntax-class (syntax-after pos)))))
+          (cl-incf pos))))
+     (if result
+       (point-marker)
+      (goto-char pos)
+      (setq result (point-marker))
+      (goto-char start-pos)
+      result))))
+
+
 (defun bm-bookmark-add (&optional annotation time temporary-bookmark)
   "Add bookmark at current line.
 
@@ -723,10 +750,11 @@ TIME is useful when `bm-in-lifo-order' is not nil.
 
 if TEMPORARY-BOOKMARK not nil,the bookmark will be removed
 when `bm-next' or `bm-previous' navigate to this bookmark."
-  (let((bookmark (bm-bookmark-at (point))))
+  (let* ((point-marker (bm--get-point-marker))
+         (bookmark (bm-bookmark-at point-marker)))
     (if bookmark
         (progn (setq bm-current bookmark)
-               (overlay-put bookmark 'position (point-marker))
+               (overlay-put bookmark 'position point-marker)
                (overlay-put bookmark 'time (or time (float-time))))
       (let ((hlface (if bm-buffer-persistence bm-persistent-face bm-face))
             bookmark)
@@ -738,11 +766,11 @@ when `bm-next' or `bm-previous' navigate to this bookmark."
         (setq bookmark (make-overlay (bm-start-position) (bm-end-position)))
         (when annotation
           (overlay-put bookmark 'annotation annotation))
-        ;; set market
+        ;; set marker
         (overlay-put bookmark 'time (or time (float-time)))
         (overlay-put bookmark 'temporary-bookmark
                      (if temporary-bookmark t temporary-bookmark-p))
-        (overlay-put bookmark 'position (point-marker))
+        (overlay-put bookmark 'position point-marker)
         ;; select bookmark face
         (when (bm-highlight-line)
           (overlay-put bookmark 'face hlface))
@@ -811,7 +839,7 @@ current buffer. Format depends on `bm-modeline-display-total' and
 
 (defun bm-start-position nil
   "Return the bookmark start position."
-  (point-at-bol))
+  (point-at-bol)
 
 
 (defun bm-end-position nil
